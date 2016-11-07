@@ -1,0 +1,133 @@
+    public static Matcher<Object> withItemContent(String expectedText) {
+    
+ Object一般用在不是在UI上可见的或是要比较的内容不是View的情况下，一般用在Class，比如说要比较界面上的某个值和期望的一个值，而期望的这个值只能通过调用某个class
+ 的某个function才能得到，所以这里就只有用class
+ 
+    String expectedText这个地方是用于存储调用这个match时传入的参数，用于后面用来比较，比如说 withItemContent(“test”))),那么expectedText就是“test”,后面
+    就可以用expectedText来和class中的值或直接和某值进行比较。
+    
+    
+    
+    return new BoundedMatcher
+    
+    Object--> Object, Class Name
+    
+    public static Matcher<Object> withBookId(final int bookId) {
+    return new BoundedMatcher<Object, Book>(Book.class) 
+    
+    View--> View, View Class Name
+	public static Matcher<View> withErrorText(@StringRes final int resourceId)
+   	return new BoundedMatcher<View, TextView>(TextView.class) 
+
+
+withItemContent(String expectedText)
+这里，可以直接传一个需要比较的内容，可以是String, int，也可以是Matcher对像Matcher<String> stringMatcher。
+如果是Matcher对象的话比较的时候，应用matches.  
+
+stringMatcher.matches(textView.getError().toString());
+
+如果是String或int，就可以用 equals 或是 ==
+
+ protected boolean matchesSafely(Book book) {
+                return bookId == book.getId();
+            }
+            
+            
+ protected boolean matchesSafely(Book book) {
+                return bookTitle.equals(book.getTitle());
+            }
+
+
+
+
+如果在屏幕上直接出现的String, int，可以直接作为参数
+matchesSafely(String text) 
+
+如果在屏幕上出现的View,,可以用view 作为参数  matchesSafely(TextView textView)
+textView.getText().toString().matches(pattern);
+
+如果是在屏幕上没有出现的,或是不能直接通过View得到value的,可以用类作为参数
+matchesSafely(Book book)
+return bookId == book.getId();
+return bookTitle.equals(book.getTitle());
+
+
+             
+如果在matcher里是用的view, 而不是object，那么在使用custom matcher时只能用onview，而不能用在ondata，因为这是view。
+             
+                
+2. initializting, find all the string on the screen?
+frameworks does that for you, pass all the string to the text one by one and compare to the value you passed
+
+1.           public boolean matchesSafely(String text) {
+                return itemTextMatcher.matches(text);
+
+
+ matches vs. equals
+matches is a wrapper and it will call another wrapppter and finally call equals
+
+3. when should I use custom matcher?
+compare the value on the screen with the value return from a class
+
+
+
+4. ondata, onview
+all the data displaying or not displaying on the ui, everything on the UI
+
+
+5. Object ,view
+class, something on the ui
+
+
+
+customer can be used in onView, and also in OnData
+  
+  use Object
+  compare to the returns of a function from the class specified
+  
+  
+  public static Matcher<Object> withValue(final int value) {
+    return new BoundedMatcher<Object, MainActivity.Item>(MainActivity.Item.class) {
+      @Override
+      public void describeTo(Description description) {
+        description.appendText("has value " + value);
+      }
+      @Override
+      public boolean matchesSafely(MainActivity.Item item) {
+        return item.toString().equals(String.valueOf(value));
+      }
+    };
+  }
+}
+
+  use Object
+  compare to the returns of a function from the class specified
+  
+  private static Matcher<Object> withToolbarTitle(final Matcher<CharSequence> textMatcher) {
+    return new BoundedMatcher<Object, Toolbar>(Toolbar.class) {
+      @Override public boolean matchesSafely(Toolbar toolbar) {
+        return textMatcher.matches(toolbar.getTitle());
+      }
+      @Override public void describeTo(Description description) {
+        description.appendText("with toolbar title: ");
+        textMatcher.describeTo(description);
+      }
+    };
+  }
+
+
+
+
+
+
+
+  @Test
+  public void toolbarTitle() {
+    CharSequence title = InstrumentationRegistry.getTargetContext().getString(R.string.my_title);
+    matchToolbarTitle(title);
+  }
+
+  private static ViewInteraction matchToolbarTitle(CharSequence title) {
+    return onView(isAssignableFrom(Toolbar.class))
+        .check(matches(withToolbarTitle(is(title))));
+  }
